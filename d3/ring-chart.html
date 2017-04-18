@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<canvas width="960" height="500"></canvas>
+<script src="//d3js.org/d3.v4.0.0-alpha.4.min.js"></script>
+<script>
+    var data=[1,1,2,3,5,8,13];
+
+    var canvas=document.querySelector('canvas'),
+        context=canvas.getContext('2d');
+
+    var width=canvas.width,
+        height=canvas.height,
+        radius=Math.min(width,height)/2;
+
+    var colors=[
+        "#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd",
+        "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"
+    ];
+//创建一个新的弧生成器outerRadius设置外径 innerRadius设置内径 padAngle设置相邻弧之间的夹角
+    //context设置渲染上下文
+    var arc=d3.arc()
+        .outerRadius(radius -10)
+        .innerRadius(radius - 70)
+        .padAngle(0.03)
+        .context(context);
+//创建一个饼生成器
+    var pie=d3.pie();
+//为饼图添加数据
+    var arcs=pie(data);
+//设置饼图水平垂直位置
+    context.translate(width/2,height/2);
+    //设置颜色透明度 globalAlpha调节透明度
+    context.globalAlpha=0.5;
+    //设置饼图每块的填充颜色
+    arcs.forEach(function (d,i) {
+        //循环创建新的路径
+        context.beginPath();
+        //添加对应的数据
+        arc(d);
+        //循环直充颜色
+        context.fillStyle=colors[i];
+        context.fill();
+    });
+    //设置每块饼图边框的颜色透明度
+    context.globalAlpha=1;
+    //绘制每块饼图的边框
+    context.beginPath();
+    arcs.forEach(arc);
+    //设置线条宽度
+    context.lineWidth=1.5;
+    context.stroke();
+</script>
+</body>
+</html>

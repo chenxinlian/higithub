@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<style>
+
+    .bar {
+        fill: url(#linear);
+        rx:8;
+        ry:8;
+    }
+
+    .bar:hover {
+        fill: brown;
+    }
+
+    .axis--x path {
+        display: none;
+    }
+    .line {
+        fill: none;
+        stroke: url(#linear);;
+        stroke-width: 2px;
+    }
+    .circle {
+        fill: steelblue;
+    }
+</style>
+<body>
+<svg width="960" height="500">
+    <linearGradient id="linear" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%"   stop-color="#05a"/>
+        <stop offset="100%" stop-color="#0a5"/>
+    </linearGradient>
+</svg>
+<script src="https://d3js.org/d3.v4.min.js"></script>
+<script>
+    var svg=d3.select("svg"),
+        margin = {top: 50, right: 20, bottom: 30, left: 40},
+        width = +svg.attr("width") - margin.left - margin.right,
+        height = +svg.attr("height") - margin.top - margin.bottom;
+
+    var x = d3.scaleBand().rangeRound([0, width]).padding(0.85),
+        y = d3.scaleLinear().rangeRound([height, 0]);
+
+    //添加g元素
+    var g=svg.append("g")
+    //设置g元素开始绘制的位置
+        .attr("transform","translate("+margin.left+","+margin.top+")");
+    //请求图表所需数据
+    d3.tsv("data3.tsv",function(d){
+        d.frequency=+d.frequency;
+        return d;
+    },function (error,data) {
+        if(error)throw error;
+        //创建一个新的线生成器
+        var line=d3.line()
+        //设置x访问器
+            .x(function (d) {
+                //console.log(x(d.letter));
+                return x(d.letter)+6;
+            })
+            //设置主访问器
+            .y(function (d) {
+                return y(d.frequency)-40;
+            });
+        //指定可观没值的间隔（即x轴数据之间的间隔）
+        x.domain(data.map(function (d) { return d.letter }));
+        //同上
+        y.domain([0,d3.max(data,function (d) {
+            return d.frequency;
+        })]);
+        //添加g元素（绘制x轴）
+        g.append("g")
+        //添加类名
+            .attr("class","axis axis--x")
+            //translate(水平，垂直)
+            .attr("transform","translate(0,"+height+")")
+            //d3.axisBottom()创建一个底部轴生成器（x轴）
+            .call(d3.axisBottom(x));
+        //console.log(height);
+        g.append("g")
+            .attr("class","axis axis--y")
+            //axisLeft()创建一个左部生成器（y轴）ticks()生成数据值并设置数据格式
+            .call(d3.axisLeft(y).ticks(10,"%"))
+            //添加文本
+
+        //添加路径
+        g.append("path")
+        //datum()获取或设置元素的数据（不绑定）
+            .datum(data)
+            //对path添加类名
+            .attr("class","line")
+            .attr("d",line);
+        g.selectAll("circle")
+        //data()元素和数据绑定
+            .data(data)
+            //enter()获得进入选择器
+            .enter().append("circle")
+        //添加类名
+            .attr("class","circle")
+            //设置对应数据的小圆点的水平起点位置
+            .attr("cx",function (d) {
+                console.log(x(d.letter));
+                return x(d.letter)+6;
+            })
+            //设置对应数据的小圆点的垂直起点位置
+            .attr("cy",function (d) {
+                return y(d.frequency)-40;
+            })
+            //设置圆点大小
+            .attr("r",4);
+
+        g.selectAll(".bar")
+            .data(data)
+            .enter().append("rect")
+            .attr("class","bar")
+            .attr("x",function (d) {
+                return x(d.letter);
+            })
+            .attr("y",function (d) {
+                return y(d.frequency);
+            })
+            .attr("width",x.bandwidth())
+            .attr("height",function (d) {
+                return height-y(d.frequency);
+            });
+    });
+</script>
+</body>
+</html>

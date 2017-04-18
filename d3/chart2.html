@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>chart2</title>
+</head>
+<body>
+<canvas width="960" height="500"></canvas>
+<script src="//d3js.org/d3.v4.0.0-alpha.4.min.js"></script>
+<script>
+    var canvas=document.querySelector("canvas"),
+        context=canvas.getContext("2d");
+//初始化外边距
+    var margin={top:20,right:20,bottom:30,left:40},
+        width=canvas.width-margin.left-margin.right,
+        height=canvas.height-margin.top-margin.bottom;
+//创建序数段比例尺(x轴)
+    var x=d3.scaleBand()
+        //设置输入的定义域(x轴的宽度）
+        .rangeRound([0,width])
+        //设置间距（每柱之间的间距）
+        .padding(0.1);
+//创建定量线性比例尺（y轴）
+    var y=d3.scaleLinear()
+        //设置取整后的值域（y轴的高度）
+        .rangeRound([height,0]);
+//设置左，上外边距
+    context.translate(margin.left,margin.top);
+    //请求数据
+    d3.requestTsv("data2.tsv",function (d) {
+        d.frequency=+d.frequency;
+        return d;
+    },function (error,data) {
+        if(error)throw error;
+        //domain指定可观测值的间隔
+        //x轴的间隔及对应值
+        x.domain(data.map(function(d) { return d.letter; }));
+        //y轴的刻度间隔及对应值
+        y.domain([0, d3.max(data, function(d) { return d.frequency; })]);
+//ticks()从一个数组间隔生成有代表的值
+        var yTickCount=10,
+            //初始化间隔值
+            yTicks=y.ticks(yTickCount),
+            yTickFormat=y.tickFormat(yTickCount,"%");
+
+        context.beginPath();
+        //moveTo()先保存一个坐标
+        //lineTo()从moveTo提供的坐标到lineTo的一条线段
+        x.domain().forEach(function(d){
+            //console.log(d);
+            context.moveTo(x(d)+x.bandwidth()/2,height);
+            context.lineTo(x(d)+x.bandwidth()/2,height+6);
+        });
+
+        context.strokeStyle="black";
+        context.stroke();
+//设置x轴刻度线的位置
+        context.textAlign="center";
+        context.textBaseline="top";
+        //将对应的内容值添加到刻度线上
+        x.domain().forEach(function (d) {
+            context.fillText(d,x(d)+x.bandwidth()/2,height+6);
+        });
+
+        context.beginPath();
+        //绘制y轴刻度线
+        yTicks.forEach(function (d) {
+            context.moveTo(0,y(d)+0.5);
+            context.lineTo(-6,y(d)+0.5);
+        });
+        context.strokeStyle="black";
+        context.stroke();
+//y轴刻度线的位置
+        context.textAlign="right";
+        context.textBaseline="middle";
+        //fillText(对应的刻度值，值的水平位置，值的垂直位置)
+        yTicks.forEach(function (d) {
+            console.log(y(d));
+            context.fillText(yTickFormat(d),-9,y(d));
+        });
+//绘制y轴，
+        context.beginPath();
+        //绘制起点
+        context.moveTo(-3,0+0.5);
+        //刻度值与y轴的间距
+        context.lineTo(0.5,0+0.5);
+        //从上至下，从左至右结束位置
+        context.lineTo(0.5,height+0.5);
+        //y轴左下角线段的长度
+        context.lineTo(-6.5,height+0.5);
+        context.strokeStyle="black";
+        context.stroke();
+//save()和restore()相互匹配，对旋转，缩放，平移等操作，操作之前用save()来保存画布，之后取出保存过的状态，不对其他的元素进行影响
+        context.save();
+        //对添加的文本进行旋转
+        context.rotate(-Math.PI/2);
+        //文本位置
+        context.textAlign="right";
+        context.textBaseline="top";
+        //文本字体大小
+        context.font="bold 10px sans-serif";
+        //文本内容及起点位置fillText(文本，x,y)(x和y作标相对于画布)
+        context.fillText("Frequency",-10,10);
+        context.restore();
+
+        //柱形图颜色
+        context.fillStyle="steelblue";
+        //绘制柱形图 fillRect()方法绘制"已填色"的矩形，默认黑色
+        //fillRect(x,y,width,height)
+        data.forEach(function (d) {
+            context.fillRect(x(d.letter), y(d.frequency), x.bandwidth(), height - y(d.frequency));
+        });
+    });
+</script>
+</body>
+</html>
